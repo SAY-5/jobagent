@@ -1,0 +1,15 @@
+services:
+  jobagent:
+    build: .
+    environment:
+      JOBAGENT_DSN: sqlite:////srv/data/jobagent.db
+      JOBAGENT_OPENAI_MODEL: ${JOBAGENT_OPENAI_MODEL:-gpt-4o-mini}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ports:
+      - "8090:8090"
+    volumes:
+      - jobdata:/srv/data
+      - ./web:/srv/web:ro
+
+volumes:
+  jobdata:

@@ -1,0 +1,24 @@
+{
+  "name": "example",
+  "sections": {
+    "first_name": "Sai",
+    "last_name": "Yamani",
+    "full_name": "Sai Yamani",
+    "email": "you@example.com",
+    "phone": "+1 555 0100",
+    "location": "San Francisco, CA",
+    "current_title": "Software Engineer",
+    "years_experience": "5",
+    "authorized_to_work": "Yes",
+    "requires_sponsorship": "No",
+    "linkedin_url": "https://linkedin.com/in/example",
+    "github_url": "https://github.com/example",
+    "portfolio_url": "https://example.com",
+    "salary_expectation": "$200,000 base",
+    "available_start_date": "2026-06-01",
+    "education": "B.S. Computer Science"
+  },
+  "extra": {
+    "why_interested": "Drawn to the company's emphasis on engineering quality and the chance to ship a tangible product."
+  }
+}

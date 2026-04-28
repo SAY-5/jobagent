@@ -1,0 +1,351 @@
+/* -------------------------------------------------------------------
+   JobAgent · Dossier — manila-folder case-file aesthetic.
+   Reference points: archival case files, mid-century investigation
+   reports, Hopper "Office at Night", forensic reports. Special Elite
+   typewriter for the chrome, Cormorant Garamond for the body, IBM
+   Plex Mono for fields and identifiers. Paper-tone background, ink-
+   stamp status badges, stitched divider rules.
+   ------------------------------------------------------------------- */
+
+:root {
+  --paper:       #f3ead8;
+  --paper-2:     #ece1c8;
+  --paper-3:     #e3d6b8;
+  --manila:      #d9c490;
+  --ink:         #1f1a13;
+  --ink-soft:    #38301f;
+  --ink-mute:    #6b5d44;
+  --rule:        #b1a37b;
+  --stamp-red:   #b53b30;
+  --stamp-green: #2e6f3a;
+  --stamp-amber: #b08323;
+  --accent:      #1f3a5f;     /* navy ink */
+  --highlight:   #f1d96a;
+  --shadow:      rgba(31, 26, 19, 0.18);
+
+  --typewriter: "Special Elite", "Courier New", monospace;
+  --serif:      "Cormorant Garamond", "Times New Roman", serif;
+  --mono:       "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.55;
+  min-height: 100vh;
+}
+
+/* Paper texture: a faint cross-hatched grain + warm vignette. */
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse at center, transparent 20%, rgba(112, 84, 38, 0.10) 110%),
+    repeating-linear-gradient(45deg,
+      rgba(112, 84, 38, 0.025) 0 2px,
+      transparent 2px 4px),
+    repeating-linear-gradient(-45deg,
+      rgba(112, 84, 38, 0.020) 0 2px,
+      transparent 2px 4px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+#app { position: relative; z-index: 1; }
+
+/* ---------------- top bar ----------------------------------------- */
+
+.topbar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  padding: 26px 56px 18px;
+  border-bottom: 1px solid var(--rule);
+  position: relative;
+  background: var(--paper);
+}
+.topbar::after {
+  /* Stitched second rule under the chrome. */
+  content: "";
+  position: absolute;
+  left: 56px; right: 56px; bottom: -5px;
+  border-top: 1px dashed var(--rule);
+}
+
+.brand {
+  font-family: var(--typewriter);
+  font-size: 28px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.brand .dot {
+  display: inline-block;
+  width: 9px; height: 9px;
+  background: var(--stamp-red);
+  border-radius: 50%;
+  margin: 0 8px 2px 0;
+  vertical-align: middle;
+}
+.brand small {
+  display: block;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-mute);
+  letter-spacing: 0.18em;
+  margin-top: 2px;
+}
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  text-align: center;
+}
+
+.case-num {
+  font-family: var(--typewriter);
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-align: right;
+}
+.case-num b { color: var(--stamp-red); display: block; font-size: 17px; }
+
+/* ---------------- layout ------------------------------------------ */
+
+main {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  min-height: calc(100vh - 100px);
+}
+
+aside.cabinet {
+  border-right: 1px dashed var(--rule);
+  padding: 32px 28px;
+  background: var(--paper-2);
+  overflow: auto;
+}
+aside.cabinet h3 {
+  font-family: var(--typewriter);
+  font-size: 13px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  margin: 0 0 16px;
+  color: var(--ink-mute);
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 6px;
+}
+
+ul.runs { list-style: none; margin: 0; padding: 0; }
+ul.runs li {
+  border-bottom: 1px dashed var(--rule);
+  padding: 12px 4px;
+  cursor: pointer;
+  position: relative;
+  transition: background 120ms;
+}
+ul.runs li:hover { background: var(--paper-3); }
+ul.runs li.active { background: var(--manila); }
+ul.runs li.active::before {
+  content: "▶";
+  position: absolute;
+  left: -16px;
+  color: var(--stamp-red);
+  font-size: 12px;
+}
+
+.run-title {
+  font-family: var(--typewriter);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  text-transform: uppercase;
+}
+.run-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-mute);
+  margin-top: 4px;
+  letter-spacing: 0.04em;
+}
+.status-tag {
+  display: inline-block;
+  padding: 1px 9px;
+  border: 1.5px solid currentColor;
+  border-radius: 0;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  margin-right: 8px;
+  vertical-align: 1px;
+}
+.status-tag.gated      { color: var(--stamp-amber); }
+.status-tag.submitted  { color: var(--stamp-green); }
+.status-tag.failed     { color: var(--stamp-red);   }
+.status-tag.in_progress { color: var(--accent); }
+
+/* ---------------- dossier (right pane) ---------------------------- */
+
+section.dossier {
+  padding: 36px 64px 80px;
+  position: relative;
+  max-width: 920px;
+}
+.dossier .header {
+  text-align: left;
+  margin-bottom: 36px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--ink);
+}
+.dossier h1 {
+  font-family: var(--typewriter);
+  font-size: 34px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 0 0 8px;
+  line-height: 1.1;
+}
+.dossier .h1-sub {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 18px;
+  color: var(--ink-soft);
+}
+
+.stamp {
+  position: absolute;
+  top: 28px;
+  right: 64px;
+  border: 4px double var(--stamp-red);
+  color: var(--stamp-red);
+  font-family: var(--typewriter);
+  font-size: 22px;
+  letter-spacing: 0.18em;
+  padding: 12px 18px;
+  text-transform: uppercase;
+  transform: rotate(-7deg);
+  text-align: center;
+  line-height: 1;
+  opacity: 0.92;
+  background: rgba(243, 234, 216, 0.4);
+  pointer-events: none;
+}
+.stamp small {
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  display: block;
+  margin-top: 4px;
+}
+.stamp.green { border-color: var(--stamp-green); color: var(--stamp-green); }
+.stamp.amber { border-color: var(--stamp-amber); color: var(--stamp-amber); }
+
+/* a divider that looks like stitching */
+.stitch {
+  margin: 28px 0;
+  border: 0;
+  border-top: 1px dashed var(--rule);
+  position: relative;
+}
+.stitch::before {
+  content: attr(data-label);
+  position: absolute;
+  top: -10px;
+  left: 0;
+  background: var(--paper);
+  padding-right: 14px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 220px 1fr auto;
+  gap: 20px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--paper-3);
+  align-items: center;
+}
+.field-label {
+  font-family: var(--typewriter);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink);
+}
+.field-label small {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-mute);
+  margin-top: 4px;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+.field-value {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink-soft);
+  background: var(--paper-2);
+  padding: 6px 10px;
+  border: 1px solid var(--rule);
+  word-break: break-word;
+}
+.field-value.empty {
+  font-style: italic;
+  color: var(--ink-mute);
+  background: transparent;
+  border: 1px dashed var(--rule);
+}
+.field-action {
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.field-action .conf {
+  display: block;
+  font-size: 10px;
+  color: var(--ink-mute);
+  margin-top: 4px;
+}
+.field-action .pill {
+  border: 1.5px solid currentColor;
+  padding: 1.5px 9px;
+  display: inline-block;
+}
+.field-action .pill.fill   { color: var(--stamp-green); }
+.field-action .pill.review { color: var(--stamp-amber); }
+.field-action .pill.skip   { color: var(--ink-mute); }
+
+.empty-state {
+  text-align: center;
+  margin-top: 16vh;
+  color: var(--ink-mute);
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 22px;
+}
+.empty-state .eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--stamp-red);
+  font-style: normal;
+  margin-bottom: 10px;
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--rule); }
