@@ -222,6 +222,10 @@ class Store:
                 fields = list(s.exec(select(DetectedField).where(DetectedField.step_id == st.id)))
                 f_out = []
                 for f in fields:
+                    # Decisions are uuid-keyed, so order by timestamp;
+                    # ties (same wall-clock ms) fall back to id.desc()
+                    # — operator overrides are stamped after the
+                    # initial classification so they win in either case.
                     cls = s.exec(
                         select(Classification)
                         .where(Classification.detected_field_id == f.id)
@@ -230,7 +234,7 @@ class Store:
                     dec = s.exec(
                         select(DecisionRow)
                         .where(DecisionRow.detected_field_id == f.id)
-                        .order_by(DecisionRow.id.desc())
+                        .order_by(DecisionRow.decided_at.desc(), DecisionRow.id.desc())
                     ).first()
                     f_out.append({
                         "id": f.id,
