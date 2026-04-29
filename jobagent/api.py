@@ -45,8 +45,15 @@ class ProfileBody(BaseModel):
     extra: dict[str, str] = {}
 
 
-def build_app(store: Store | None = None) -> FastAPI:
-    state = {"store": store or Store(os.environ.get("JOBAGENT_DSN", "sqlite:///./jobagent.db"))}
+def build_app(
+    store: Store | None = None,
+    calibration: object | None = None,
+) -> FastAPI:
+    from .calibration import CalibrationCache  # local import (avoid cycles in __init__)
+    state = {
+        "store": store or Store(os.environ.get("JOBAGENT_DSN", "sqlite:///./jobagent.db")),
+        "calibration": calibration if calibration is not None else CalibrationCache(),
+    }
     app = FastAPI(title="JobAgent · Review Console", version="0.1.0")
     app.add_middleware(
         CORSMiddleware,
@@ -102,6 +109,21 @@ def build_app(store: Store | None = None) -> FastAPI:
                     break
             if df is None:
                 raise HTTPException(404, "field not found in run")
+            # Capture the prior LLM classification (if any) BEFORE we
+            # stamp the override — we need to know whether the operator
+            # *confirmed* what the model said or *rejected* it. That
+            # signal is what trains the calibration cache.
+            prior = s.exec(
+                select(Classification)
+                .where(Classification.detected_field_id == df.id)
+                .order_by(Classification.id.desc())
+            ).first()
+            confirmed_prior = (
+                prior is not None
+                and prior.section == body.section.value
+                and prior.source != "operator"
+            )
+
             # Stamp an operator-override classification + decision.
             s.add(Classification(
                 detected_field_id=df.id, section=body.section.value,
@@ -111,6 +133,21 @@ def build_app(store: Store | None = None) -> FastAPI:
                 detected_field_id=df.id, action=body.action, value=body.value,
                 reason="operator override", reviewed_by_human=True,
             ))
+
+            # v3: feed the calibration cache. The label is the field's
+            # human-visible label; we record:
+            #   confirms[+1] for the operator's section
+            #   rejects[+1]  for the model's section, if it differed
+            cal = state.get("calibration")
+            if cal is not None:
+                cal.record(df.label, body.section, confirmed=True)
+                if prior is not None and not confirmed_prior:
+                    try:
+                        prior_section = ResumeSection(prior.section)
+                    except ValueError:
+                        prior_section = None
+                    if prior_section is not None and prior_section != body.section:
+                        cal.record(df.label, prior_section, confirmed=False)
             s.commit()
         return {"ok": True}
 
@@ -122,6 +159,27 @@ def build_app(store: Store | None = None) -> FastAPI:
             extra=body.extra,
         )
         return {"id": p.id, "name": p.name}
+
+    @app.get("/v1/calibration")
+    def calibration_dump() -> dict:
+        """Read-only view into the calibration cache. Each entry is a
+        (label, section, confirms, rejects, accuracy). Auditable."""
+        cal = state.get("calibration")
+        if cal is None:
+            return {"items": []}
+        items: list[dict] = []
+        for label_h, by_section in cal._by_label.items():  # noqa: SLF001
+            for section, stat in by_section.items():
+                items.append({
+                    "label_hash": label_h,
+                    "label": stat.last_text,
+                    "section": section.value,
+                    "confirms": stat.confirms,
+                    "rejects": stat.rejects,
+                    "accuracy": stat.accuracy,
+                })
+        items.sort(key=lambda x: (-x["confirms"], x["label"]))
+        return {"items": items}
 
     @app.get("/v1/profile/{name}")
     def get_profile(name: str) -> dict:

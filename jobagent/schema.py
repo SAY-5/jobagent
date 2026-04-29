@@ -84,7 +84,7 @@ class FieldClassification(BaseModel):
     reasoning: str = Field(..., max_length=400)
     # `source` is filled in by the orchestrator: which layer made the
     # call (regex prefilter, cache, llm, operator).
-    source: Literal["regex", "cache", "llm", "operator"] = "llm"
+    source: Literal["regex", "cache", "llm", "operator", "calibration"] = "llm"
 
 
 class ClassificationResponse(BaseModel):

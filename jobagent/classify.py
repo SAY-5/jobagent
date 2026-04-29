@@ -84,16 +84,34 @@ class CachingClassifier:
     `llm_call` is injected. The default `mock_llm` always returns
     UNMAPPED with confidence 0; production code passes
     `OpenAIClassifier`.
+
+    `calibration` is optional. When supplied, the classifier consults
+    it FIRST — if a (label_hash, section) pair has been confirmed by
+    operators with enough observations + accuracy, the cache returns
+    that section directly with source='calibration'. This is how v3
+    closes the loop on the dossier review console: every override
+    teaches the next run.
     """
 
     llm_call: Callable[[list[FormField]], ClassificationResponse]
     cache: dict[str, FieldClassification] = field(default_factory=dict)
     enable_regex: bool = True
+    calibration: object | None = None  # CalibrationCache (avoid import cycle)
 
     def classify(self, fields: list[FormField]) -> list[FieldClassification]:
         results: list[FieldClassification] = []
         unresolved: list[FormField] = []
         for f in fields:
+            # 0. calibration cache (operator-trained). Skips even
+            # the regex prefilter — operator overrides outrank
+            # everything else.
+            if self.calibration is not None:
+                from .calibration import calibration_classification  # local import
+                hit = self.calibration.best(f.label)
+                if hit is not None:
+                    section, stat = hit
+                    results.append(calibration_classification(f, section, stat))
+                    continue
             # 1. regex prefilter
             if self.enable_regex:
                 rx = self._regex_match(f)
