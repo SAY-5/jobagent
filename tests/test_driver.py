@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 
 from jobagent.driver import (
+    _BLOCK_SUBMIT_HOOK,
     DriverConfig,
     FakeDriver,
     JobAgentDriver,
-    _BLOCK_SUBMIT_HOOK,
     make_fake_page,
 )
 from jobagent.orchestrator import Orchestrator

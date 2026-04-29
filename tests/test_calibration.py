@@ -4,17 +4,15 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
+from jobagent.api import build_app
 from jobagent.calibration import CalibrationCache, label_hash
 from jobagent.classify import CachingClassifier
+from jobagent.orchestrator import Orchestrator
 from jobagent.schema import (
-    ClassificationResponse,
-    FieldClassification,
     FormField,
+    ResumeProfile,
     ResumeSection,
 )
-from jobagent.api import build_app
-from jobagent.orchestrator import Orchestrator
-from jobagent.schema import ResumeProfile
 from jobagent.store import fresh_memory_store
 
 

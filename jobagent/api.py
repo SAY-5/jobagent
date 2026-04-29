@@ -27,7 +27,6 @@ from .store import (
     DecisionRow,
     DetectedField,
     FormStep,
-    Profile,
     Run,
     Store,
 )
@@ -168,7 +167,7 @@ def build_app(
         if cal is None:
             return {"items": []}
         items: list[dict] = []
-        for label_h, by_section in cal._by_label.items():  # noqa: SLF001
+        for label_h, by_section in cal._by_label.items():
             for section, stat in by_section.items():
                 items.append({
                     "label_hash": label_h,

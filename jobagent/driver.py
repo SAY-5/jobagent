@@ -24,7 +24,6 @@ without the optional dependency installed.
 from __future__ import annotations
 
 import time
-from collections.abc import Callable
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -153,13 +152,13 @@ class JobAgentDriver:
 
     # --- internals ----------------------------------------------------
 
-    def _install_block_hook(self, page: "Page") -> None:
+    def _install_block_hook(self, page: Page) -> None:
         if self.config.mode == "auto":
             return
         page.add_init_script(_BLOCK_SUBMIT_HOOK)
         page.evaluate(_BLOCK_SUBMIT_HOOK)
 
-    def _click_easy_apply(self, page: "Page") -> bool:
+    def _click_easy_apply(self, page: Page) -> bool:
         # Strategies, in order. Each returns False on miss without raising.
         for selector in (
             'button:has-text("Easy Apply")',
@@ -171,13 +170,13 @@ class JobAgentDriver:
                 try:
                     loc.click(timeout=self.config.step_timeout_ms)
                     return True
-                except Exception:  # noqa: BLE001
+                except Exception:
                     continue
         return False
 
     def _apply_decisions(
         self,
-        page: "Page",
+        page: Page,
         decisions: list[Decision],
         fields: list[FormField],
     ) -> None:
@@ -190,13 +189,13 @@ class JobAgentDriver:
                 continue
             try:
                 self._fill_one(page, f, d.value)
-            except Exception:  # noqa: BLE001
+            except Exception:
                 # We log silently and let the run continue — the gate
                 # logic will catch missed required fields. Each error
                 # also persists in the orchestrator's audit trail.
                 continue
 
-    def _fill_one(self, page: "Page", f: FormField, value: str) -> None:
+    def _fill_one(self, page: Page, f: FormField, value: str) -> None:
         sel = f"#{f.field_id}"
         loc = page.locator(sel).first
         if loc.count() == 0:
@@ -221,7 +220,7 @@ class JobAgentDriver:
             # we got here in auto mode the operator approved.
             loc.set_input_files(value)
 
-    def _click_next(self, page: "Page") -> bool:
+    def _click_next(self, page: Page) -> bool:
         for label in self.config.next_text_match:
             loc = page.locator(f'button:has-text("{label}")').first
             if loc.count() > 0:
@@ -229,11 +228,11 @@ class JobAgentDriver:
                     loc.click(timeout=self.config.step_timeout_ms)
                     page.wait_for_load_state("networkidle", timeout=self.config.step_timeout_ms)
                     return True
-                except Exception:  # noqa: BLE001
+                except Exception:
                     continue
         return False
 
-    def _click_submit_if_appropriate(self, page: "Page", outcome: StepOutcome) -> bool:
+    def _click_submit_if_appropriate(self, page: Page, outcome: StepOutcome) -> bool:
         if self.config.mode != "auto":
             return False
         if outcome.needs_review:
@@ -245,15 +244,15 @@ class JobAgentDriver:
                     loc.click(timeout=self.config.step_timeout_ms)
                     page.wait_for_load_state("networkidle", timeout=self.config.step_timeout_ms)
                     return True
-                except Exception:  # noqa: BLE001
+                except Exception:
                     continue
         return False
 
-    def _screenshot(self, page: "Page", name: str) -> Path:
+    def _screenshot(self, page: Page, name: str) -> Path:
         out = self.config.screenshots_dir / f"{int(time.time()*1000)}-{name}.png"
         try:
             page.screenshot(path=str(out), full_page=True)
-        except Exception:  # noqa: BLE001
+        except Exception:
             pass
         return out
 
@@ -268,7 +267,7 @@ def _d_summary(d: Decision) -> dict:
 
 
 # Tiny re-export so callers can import everything from `jobagent.driver`.
-__all__ = ["DriverConfig", "JobAgentDriver", "_BLOCK_SUBMIT_HOOK"]
+__all__ = ["_BLOCK_SUBMIT_HOOK", "DriverConfig", "JobAgentDriver"]
 
 
 # Tests don't need playwright installed — they exercise _apply_decisions
@@ -278,7 +277,7 @@ __all__ = ["DriverConfig", "JobAgentDriver", "_BLOCK_SUBMIT_HOOK"]
 
 @dataclass
 class _FakeLocator:
-    page: "_FakePage"
+    page: _FakePage
     selector: str
     matches: int = 0
     last_action: str | None = None
@@ -312,7 +311,7 @@ class _FakeLocator:
         self.page.actions.append(("upload", self.selector, path))
 
     @property
-    def first(self) -> "_FakeLocator":
+    def first(self) -> _FakeLocator:
         return self
 
 
@@ -355,6 +354,5 @@ class FakeDriver(JobAgentDriver):
 
 # Used by tests; defining here means the prod path doesn't ship the
 # fake helpers (they're only loaded if a test imports FakeDriver).
-make_fake_page: Callable[[set[str] | None], _FakePage] = (
-    lambda present=None: _FakePage(present=present)
-)
+def make_fake_page(present: set[str] | None=None) -> _FakePage:
+    return (_FakePage(present=present))
